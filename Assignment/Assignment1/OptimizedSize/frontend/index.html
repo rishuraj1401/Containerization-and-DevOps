@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UserBase — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e0ad;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --up: #43e0ad;
+    --down: #ff6584;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 500px; height: 500px; background: rgba(108,99,255,0.12); top: -150px; right: -100px; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(67,224,173,0.07); bottom: 0; left: -100px; }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 52px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .logo-tag {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .logo-name {
+    font-family: var(--font-head);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .logo-name span {
+    color: var(--accent);
+  }
+
+  .header-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--down);
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+  .pulse-dot.online {
+    background: var(--up);
+    box-shadow: 0 0 0 0 rgba(67,224,173,0.5);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(67,224,173,0.5); }
+    70%  { box-shadow: 0 0 0 8px rgba(67,224,173,0); }
+    100% { box-shadow: 0 0 0 0 rgba(67,224,173,0); }
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: rgba(108,99,255,0.4); }
+
+  /* Health */
+  .health-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .health-info {
+    flex: 1;
+  }
+
+  .health-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .health-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .health-status {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.4s;
+    min-width: 100px;
+    text-align: center;
+  }
+  .health-status.ok    { color: var(--up);   border-color: rgba(67,224,173,0.3);  background: rgba(67,224,173,0.08); }
+  .health-status.fail  { color: var(--down); border-color: rgba(255,101,132,0.3); background: rgba(255,101,132,0.08); }
+
+  /* Inputs & Form */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .field input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input::placeholder { color: var(--muted); }
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #7b74ff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
+  .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+  .btn-sm { padding: 8px 16px; font-size: 12px; border-radius: 8px; }
+
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+
+  .btn-row { display: flex; gap: 12px; align-items: center; }
+
+  /* Toast */
+  .toast-wrap {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 13px;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastIn 0.3s ease both;
+    pointer-events: all;
+  }
+  .toast.success { border-color: rgba(67,224,173,0.4); }
+  .toast.error   { border-color: rgba(255,101,132,0.4); }
+  .toast-icon { font-size: 16px; }
+  @keyframes toastIn {
+    from { opacity:0; transform: translateY(12px) scale(0.95); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toastOut {
+    to { opacity:0; transform: translateY(8px) scale(0.95); }
+  }
+
+  /* User list */
+  .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .user-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .user-item:hover { border-color: rgba(108,99,255,0.35); transform: translateX(4px); }
+
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 800;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .user-details { flex: 1; }
+  .user-name  { font-family: var(--font-head); font-size: 15px; font-weight: 600; }
+  .user-email { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .user-id {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s 0.05s ease both;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-value.accent  { color: var(--accent); }
+  .stat-value.accent2 { color: var(--accent2); }
+  .stat-value.accent3 { color: var(--accent3); }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* Loading spinner */
+  .spin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <span class="logo-tag">Admin Dashboard</span>
+      <div class="logo-name">User<span>Base</span></div>
+    </div>
+    <div class="header-badge">
+      <div class="pulse-dot" id="headerDot"></div>
+      <span id="headerStatus">Checking...</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-value accent" id="statUsers">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Backend</div>
+      <div class="stat-value accent2" id="statBackend">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">API Endpoint</div>
+      <div class="stat-value accent3" style="font-size:13px; margin-top:8px; font-family: var(--font-mono); font-weight:400;">:5000</div>
+    </div>
+  </div>
+
+  <!-- Health Check -->
+  <div class="section">
+    <div class="section-label">System Health</div>
+    <div class="card">
+      <div class="health-row">
+        <div class="health-info">
+          <div class="health-title">Backend Service</div>
+          <div class="health-sub">http://172.24.10.20:5000/health</div>
+        </div>
+        <div class="health-status" id="healthStatus">Unknown</div>
+        <button class="btn btn-ghost btn-sm" onclick="healthCheck()" id="healthBtn">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+          Ping
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add User -->
+  <div class="section">
+    <div class="section-label">New Record</div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field">
+          <label>Full Name</label>
+          <input id="name" placeholder="e.g. Raj Rishu" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input id="email" type="email" placeholder="e.g. rajrishu@domain.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="addUser()" id="addBtn">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
+          Add User
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users List -->
+  <div class="section">
+    <div class="section-label">
+      User Records
+      <button class="btn btn-ghost btn-sm" onclick="getUsers()" id="loadBtn" style="margin-left:auto;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div class="card" style="padding: 20px;">
+      <div class="user-list" id="userList">
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <div>Click <strong>Refresh</strong> to load users</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API = "http://172.24.10.20:5000";
+const COLORS = [
+  ['#6c63ff','#3d3680'], ['#ff6584','#8a2d42'],
+  ['#43e0ad','#1e7a5c'], ['#ffc75f','#8a6a20'],
+  ['#ff9a4a','#8a4e1e'], ['#a78bfa','#5b42a8']
+];
+let userCount = 0;
+
+function getAvatarColor(name) {
+  const i = name.charCodeAt(0) % COLORS.length;
+  return COLORS[i];
+}
+
+function toast(msg, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${type === 'success' ? '✓' : '✕'}</span> ${msg}`;
+  wrap.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, 2800);
+}
+
+async function healthCheck() {
+  const btn = document.getElementById('healthBtn');
+  const statusEl = document.getElementById('healthStatus');
+  const dot = document.getElementById('headerDot');
+  const headerStatus = document.getElementById('headerStatus');
+  const statBackend = document.getElementById('statBackend');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  statusEl.className = 'health-status';
+  statusEl.textContent = 'Checking…';
+
+  try {
+    const res = await fetch(API + '/health');
+    const data = await res.json();
+    statusEl.textContent = data.status || 'OK';
+    statusEl.className = 'health-status ok';
+    dot.className = 'pulse-dot online';
+    headerStatus.textContent = 'Online';
+    statBackend.textContent = 'UP';
+    toast('Backend is healthy');
+  } catch {
+    statusEl.textContent = 'Unreachable';
+    statusEl.className = 'health-status fail';
+    dot.className = 'pulse-dot';
+    headerStatus.textContent = 'Offline';
+    statBackend.textContent = 'DOWN';
+    toast('Backend is unreachable', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg> Ping';
+  }
+}
+
+async function addUser() {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!name || !email) { toast('Name and email are required', 'error'); return; }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Adding…';
+
+  try {
+    await fetch(API + '/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email })
+    });
+    toast(`${name} added successfully`);
+    clearForm();
+    getUsers();
+  } catch {
+    toast('Failed to add user', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg> Add User';
+  }
+}
+
+async function getUsers() {
+  const btn = document.getElementById('loadBtn');
+  const list = document.getElementById('userList');
+  btn.disabled = true;
+
+  list.innerHTML = '<div class="empty-state"><div class="spin" style="width:24px;height:24px;margin:0 auto 12px;"></div><div>Loading…</div></div>';
+
+  try {
+    const res = await fetch(API + '/users');
+    const data = await res.json();
+    userCount = data.length;
+    document.getElementById('statUsers').textContent = userCount;
+
+    if (!data.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><div>No users found. Add one above.</div></div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    data.forEach((u, i) => {
+      const [bg, shadow] = getAvatarColor(u.name || '?');
+      const initial = (u.name || '?')[0];
+      const item = document.createElement('div');
+      item.className = 'user-item';
+      item.style.animationDelay = `${i * 0.05}s`;
+      item.innerHTML = `
+        <div class="avatar" style="background:${bg}22; color:${bg}; border:1px solid ${bg}44;">${initial}</div>
+        <div class="user-details">
+          <div class="user-name">${escHtml(u.name)}</div>
+          <div class="user-email">${escHtml(u.email)}</div>
+        </div>
+        <div class="user-id">#${String(u.id ?? i+1).padStart(4,'0')}</div>
+      `;
+      list.appendChild(item);
+    });
+  } catch {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon" style="color:var(--down)">⚠</div><div>Failed to load users</div></div>';
+    toast('Could not fetch users', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function clearForm() {
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Auto health check on load
+window.addEventListener('load', healthCheck);
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+[Unit]
+Description=Chef Demo Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'while true; do echo "Chef Demo Service: $(date)" >> /var/log/demo.log; sleep 60; done'
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

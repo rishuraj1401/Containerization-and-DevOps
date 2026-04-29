@@ -1,0 +1,14 @@
+{
+  "node1": {
+    "run_list": ["recipe[basics]"]
+  },
+  "node2": {
+    "run_list": ["recipe[basics]"]
+  },
+  "node3": {
+    "run_list": ["recipe[basics]"]
+  },
+  "node4": {
+    "run_list": ["recipe[basics]"]
+  }
+}
